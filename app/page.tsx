@@ -1,103 +1,170 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { VapiClient, type Vapi } from '@vapi-ai/web';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [userInput, setUserInput] = useState<string>('');
+  const [aiResponse, setAiResponse] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [listening, setListening] = useState<boolean>(false);
+  const [callActive, setCallActive] = useState<boolean>(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const vapiRef = useRef<Vapi | null>(null);
+
+  // 🔁 Call AI (Vapi)
+  const startCall = () => {
+    const vapi = new VapiClient();
+
+    vapi.setApiKey(process.env.NEXT_PUBLIC_VAPI_KEY); // ⛔️ Replace this with your real Vapi API key
+
+    vapi.on('call-start', () => {
+      console.log('Call started');
+      setCallActive(true);
+    });
+
+    vapi.on('call-end', () => {
+      console.log('Call ended');
+      setCallActive(false);
+    });
+
+    vapi.start({ agentId: 'YOUR_AGENT_ID' }); // ⛔️ Replace this with your real Agent ID
+
+    vapiRef.current = vapi;
+  };
+
+  const endCall = () => {
+    vapiRef.current?.endCall();
+    setCallActive(false);
+  };
+
+  // 🧠 Submit Text to Fake GPT
+  const handleSubmit = async (): Promise<void> => {
+    if (!userInput.trim()) return;
+
+    setLoading(true);
+    setAiResponse('');
+
+    const mockResponse = await fakeGPTReply(userInput);
+
+    setAiResponse(mockResponse);
+    setLoading(false);
+  };
+
+  // 🔊 Speak AI Response
+  const playAdvice = (): void => {
+    if (!aiResponse) return;
+    const utterance = new SpeechSynthesisUtterance(aiResponse);
+    speechSynthesis.speak(utterance);
+  };
+
+  // 🎙️ Voice-to-text Input
+  const startListening = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('Sorry, your browser does not support speech recognition.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    setListening(true);
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setUserInput(transcript);
+      setListening(false);
+    };
+
+    recognition.onerror = () => {
+      alert('Something went wrong with voice input.');
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.start();
+  };
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gray-100">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 space-y-4">
+        <h1 className="text-2xl font-bold text-center">🧠 Proactive Progress AI</h1>
+        <p className="text-center text-gray-600">
+          Talk to me about your day. I’ll listen and suggest a small task for tomorrow.
+        </p>
+
+        <textarea
+          className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring"
+          placeholder="Speak or type here..."
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+        />
+
+        <div className="flex gap-2">
+          <button
+            onClick={startListening}
+            className={`flex-1 ${
+              listening ? 'bg-yellow-500' : 'bg-blue-500'
+            } text-white py-2 px-4 rounded-lg hover:opacity-90`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {listening ? 'Listening...' : '🎤 Start Talking'}
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50"
           >
-            Read our docs
-          </a>
+            {loading ? 'Thinking...' : '🧠 Get Advice'}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={startCall}
+            disabled={callActive}
+            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+          >
+            📞 Call AI
+          </button>
+
+          {callActive && (
+            <button
+              onClick={endCall}
+              className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700"
+            >
+              🔴 Hang Up
+            </button>
+          )}
+        </div>
+
+        {aiResponse && (
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold">AI Advice:</h2>
+            <p className="text-gray-800 mt-2">{aiResponse}</p>
+            <button
+              onClick={playAdvice}
+              className="mt-3 bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+            >
+              🔊 Hear it
+            </button>
+          </div>
+        )}
+      </div>
+    </main>
   );
+}
+
+// 🔁 Temporary mock response — will be replaced later with real GPT if needed
+async function fakeGPTReply(input: string): Promise<string> {
+  await new Promise((res) => setTimeout(res, 1000));
+  return `Thanks for sharing. It sounds like you're overwhelmed. Be kind to yourself — tomorrow, just try to open your assignment doc after breakfast.`;
 }
