@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { VapiClient, type Vapi } from '@vapi-ai/web';
+import { useState } from 'react';
+import { useVapi } from '@/hooks/useVapi';
 
 export default function Home() {
   const [userInput, setUserInput] = useState<string>('');
@@ -10,31 +10,15 @@ export default function Home() {
   const [listening, setListening] = useState<boolean>(false);
   const [callActive, setCallActive] = useState<boolean>(false);
 
-  const vapiRef = useRef<Vapi | null>(null);
 
-  // 🔁 Call AI (Vapi)
+  const { isSpeechActive, audioLevel, activeTranscript, start, stop, toggleCall } = useVapi();
   const startCall = () => {
-    const vapi = new VapiClient();
-
-    vapi.setApiKey(process.env.NEXT_PUBLIC_VAPI_KEY); // ⛔️ Replace this with your real Vapi API key
-
-    vapi.on('call-start', () => {
-      console.log('Call started');
-      setCallActive(true);
-    });
-
-    vapi.on('call-end', () => {
-      console.log('Call ended');
-      setCallActive(false);
-    });
-
-    vapi.start({ agentId: 'YOUR_AGENT_ID' }); // ⛔️ Replace this with your real Agent ID
-
-    vapiRef.current = vapi;
-  };
-
+    setCallActive(true);
+    toggleCall();
+    start();
+  }
   const endCall = () => {
-    vapiRef.current?.endCall();
+    stop();
     setCallActive(false);
   };
 
@@ -60,37 +44,16 @@ export default function Home() {
 
   // 🎙️ Voice-to-text Input
   const startListening = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setCallActive(true);
+    toggleCall();
 
-    if (!SpeechRecognition) {
-      alert('Sorry, your browser does not support speech recognition.');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
+    start();
     setListening(true);
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      setUserInput(transcript);
-      setListening(false);
-    };
 
-    recognition.onerror = () => {
-      alert('Something went wrong with voice input.');
-      setListening(false);
-    };
 
-    recognition.onend = () => {
-      setListening(false);
-    };
+    
 
-    recognition.start();
   };
 
   return (
@@ -104,7 +67,7 @@ export default function Home() {
         <textarea
           className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring"
           placeholder="Speak or type here..."
-          value={userInput}
+          value={activeTranscript?.transcript || userInput}
           onChange={(e) => setUserInput(e.target.value)}
         />
 
