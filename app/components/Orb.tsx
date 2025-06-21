@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { createNoise3D } from "simplex-noise";
 import { useVapi } from "@/hooks/useVapi";
+import ConversationCard from "./ConversationCard";
 
 const Orb: React.FC = () => {
-  const { audioLevel, isSpeechActive, toggleCall } = useVapi();
+  const { audioLevel, isSpeechActive, toggleCall, messages, callStatus, start, stop } = useVapi();
+  const [showTranscript, setShowTranscript] = useState<boolean>(false);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -13,6 +15,8 @@ const Orb: React.FC = () => {
   const ballRef = useRef<THREE.Mesh | null>(null);
   const originalPositionsRef = useRef<any | null>(null);
   const noise = createNoise3D();
+
+  const isCallActive = callStatus === 'active';
 
   useEffect(() => {
     console.log("Initializing visualization...");
@@ -186,13 +190,52 @@ const Orb: React.FC = () => {
   };
 
   return (
-    <div style={{ height: "100%" }}>
-      <div
-        id="out"
-        className="hover:cursor-pointer"
-        onClick={toggleCall}
-        style={{ height: "100%", width: "100%" }}
-      ></div>
+    <div className="h-full flex flex-col">
+      {/* 3D Visualization & Buttons Container */}
+      <div className="flex-1 relative">
+        <div
+          id="out"
+          className="hover:cursor-pointer"
+          onClick={toggleCall}
+          style={{height: "100%", width: "100%"}}
+        ></div>
+        
+        {/* Control Buttons */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-3">
+            {/* Start/Stop Talking Button */}
+            <button
+            onClick={isCallActive ? stop : start}
+            className={`px-6 py-2 rounded-lg transition-colors shadow-lg ${
+                isCallActive 
+                ? 'bg-red-600 hover:bg-red-700 text-white' 
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+            >
+            {isCallActive ? '🔴 Stop Talking' : '🎤 Start Talking'}
+            </button>
+            
+            {/* Show Transcript Button */}
+            {messages.length > 0 && (
+            <button
+                onClick={() => setShowTranscript(!showTranscript)}
+                className="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+            >
+                {showTranscript ? '📋 Hide Transcript' : '📋 Show Final Transcript'}
+            </button>
+            )}
+        </div>
+      </div>
+
+      {/* Transcript Display */}
+      {showTranscript && messages.length > 0 && (
+        <div className="flex-shrink-0 p-4 bg-gray-50 border-t">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 Final Transcript</h3>
+          <ConversationCard 
+            messages={messages} 
+            activeTranscript={null}
+          />
+        </div>
+      )}
     </div>
   );
 };
