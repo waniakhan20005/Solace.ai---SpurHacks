@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { transcript, summary } = await request.json();
+    const { transcript, summary, mood, advices } = await request.json();
 
     if (!summary || typeof summary !== 'string') {
       return NextResponse.json(
@@ -20,9 +20,14 @@ export async function POST(request: NextRequest) {
 
     // TODO: Replace this with your actual Notion integration logic
     // This could be a call to Notion API or any other service
-    const result = await addToNotion(transcript, summary);
+    const result = await addToNotion(transcript, summary, mood, advices);
 
-    return NextResponse.json({ success: true, message: 'Successfully added to Notion', result });
+    return NextResponse.json({ 
+      success: true, 
+      message: `Successfully added to Notion. View at: ${result.url}`, 
+      url: result.url,
+      result 
+    });
   } catch (error) {
     console.error('Error adding to Notion:', error);
     return NextResponse.json(
@@ -32,13 +37,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function addToNotion(transcript: string, summary: string): Promise<any> {
+async function addToNotion(transcript: string, summary: string, mood: string[], advices: string[]): Promise<any> {
 
-  const res = await fetch("https://n8n.syedd.com/webhook-test/62c79a44-5917-43c9-9e15-86dd7b25c016", {
+  const res = await fetch("https://n8n.syedd.com/webhook/62c79a44-5917-43c9-9e15-86dd7b25c016", {
     method: "POST",
     body: JSON.stringify({
       transcript,
-      summary
+      summary,
+      mood,
+      advices
     })
   })
   const data = await res.json();

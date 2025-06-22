@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
 
     // TODO: Replace this with your actual AI summary generation logic
     // This could be a call to OpenAI, Claude, or any other AI service
-    const summary = await generateAISummary(transcript);
+    const result = await generateAISummary(transcript);
 
-    return NextResponse.json({ summary });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error generating summary:', error);
     return NextResponse.json(
@@ -25,7 +25,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateAISummary(transcript: string): Promise<string> {
+async function generateAISummary(transcript: string): Promise<{
+  summary: string;
+  mood: string[];
+  advices: string[];
+}> {
 
   const lines = transcript.split('\n').filter(line => line.trim());
   console.log("lines", lines);
@@ -37,5 +41,11 @@ async function generateAISummary(transcript: string): Promise<string> {
   })
   const data = await res.json();
   console.log("data", data);
- return data.output.summary
+  
+  // Return the structured data format
+  return {
+    summary: data.output.summary || "No summary generated",
+    mood: data.output.mood || ["Neutral"],
+    advices: data.output.advices || ["Take time to reflect on your feelings"]
+  };
 } 

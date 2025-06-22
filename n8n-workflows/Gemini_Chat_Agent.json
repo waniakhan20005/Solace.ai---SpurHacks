@@ -1,0 +1,178 @@
+{
+  "name": "Gemini Chat Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        340
+      ],
+      "id": "125b96d4-8d26-4075-885a-e60e36abd0c8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vBBj5Hv7Xhbot2pE",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e16ddf85-b81b-40db-9f70-0be41ab4b13c",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3066e349-f4cf-4f32-bb89-36172e75635c",
+      "name": "Webhook",
+      "webhookId": "e16ddf85-b81b-40db-9f70-0be41ab4b13c"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        820,
+        20
+      ],
+      "id": "ef20786e-29fb-4bad-97ee-719ca64883de",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "25672c20-a45b-47d0-ab9f-e01156849b17",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "cdb153f8-d54d-42b4-a867-e3de5c6164c9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is information about my chat with an AI about how their day went.{{ $json.body }}.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an emotional support agent. You are tasked by taking a conversation transcript and do the following.\n1. summarize the text\n2. extract the users overall feelings and mood\n3. give the user three advices and next steps\n\n\nAll text should be in Markdown (MDX)\nOutput the data in the following json format\n\n{\n\"summary\":\"summaryGoesHere\",\n\"mood\": [\"mood1\",\"mood2\",\"mood3\"],\n\"advices\":[\"advice1\",\"advice2\",\"advice3\"]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        360,
+        20
+      ],
+      "id": "9ead38b2-29bd-4796-8f04-dd6d6d3eba66",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"summary\":\"summaryGoesHere\",\n\"mood\": [\"mood1\",\"mood2\",\"mood3\"],\n\"advices\":[\"advice1\",\"advice2\",\"advice3\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        240
+      ],
+      "id": "0e390d68-d148-4eee-8ab3-ca19baadcb8a",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7290fc9-a07f-4065-8256-83473c654858",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a35a723517e6e17765be28b5b1c1bf511b86340329c0b3fdbd6534db63d08315"
+  },
+  "id": "bKFRXxnXmzfu1Vao",
+  "tags": []
+}
