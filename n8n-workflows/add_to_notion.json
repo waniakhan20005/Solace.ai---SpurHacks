@@ -1,0 +1,172 @@
+{
+  "name": "My workflow 7",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "62c79a44-5917-43c9-9e15-86dd7b25c016",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ebd1c1a1-afde-4efd-b1d5-a08fc721ac5c",
+      "name": "Webhook",
+      "webhookId": "62c79a44-5917-43c9-9e15-86dd7b25c016"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "21ace56f-63b3-80a0-806b-cbef4dab95ef",
+          "mode": "list",
+          "cachedResultName": "Ai Generated Notes",
+          "cachedResultUrl": "https://www.notion.so/21ace56f63b380a0806bcbef4dab95ef"
+        },
+        "title": "=Conversation - {{ $now.format('yyyy-MM-dd') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "=Conversation - {{ $now }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "heading_1",
+              "textContent": "=Summary"
+            },
+            {
+              "textContent": "={{ JSON.parse($json.body).summary }}\n"
+            },
+            {
+              "type": "heading_1",
+              "textContent": "Advices"
+            },
+            {
+              "textContent": "={{ JSON.stringify(JSON.parse($json.body).advices) }}\n"
+            },
+            {
+              "type": "heading_1",
+              "textContent": "Mood"
+            },
+            {
+              "textContent": "={{ JSON.parse($json.body).mood.map(m => String(m)).join(\", \") }}\n"
+            },
+            {
+              "type": "heading_1",
+              "textContent": "Transcript"
+            },
+            {
+              "textContent": "={{ JSON.parse($json.body).transcript }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "389a45fa-f4ce-4102-9d58-3140452b065f",
+      "name": "Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "KSqVnvIo5FXAPNyc",
+          "name": "Syed's Workplace"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "id": "b39231fc-c9aa-465c-86c9-401cad5ad647",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.syedd.com",
+            "user-agent": "node",
+            "content-length": "484",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "*",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "192.159.180.156",
+            "cf-ipcountry": "CA",
+            "cf-ray": "953c22508b78ac24-YYZ",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "content-type": "text/plain;charset=UTF-8",
+            "sec-fetch-mode": "cors",
+            "x-forwarded-for": "172.69.130.30",
+            "x-forwarded-host": "n8n.syedd.com",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "1d3c561c6595",
+            "x-real-ip": "172.69.130.30"
+          },
+          "params": {},
+          "query": {},
+          "body": "{\"transcript\":\"Assistant: Hello.\\n\\nUser: Hi. My name is Sayeed. What's your name?\\n\\nAssistant: Hi, Syed. I'm Kai.\",\"summary\":\"The conversation is a brief introduction between the user, Sayeed, and the AI, Kai, where they exchange names.\",\"mood\":[\"neutral\",\"curious\"],\"advices\":[\"Continue your conversation with Kai to learn more about what they can do.\",\"Don't hesitate to ask Kai any questions you might have.\",\"Explore different topics and functionalities that Kai might offer.\"]}",
+          "webhookUrl": "https://n8n.syedd.com/webhook/62c79a44-5917-43c9-9e15-86dd7b25c016",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "de9081ab-4d4d-494b-a42e-ef7ebc6b3d3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a35a723517e6e17765be28b5b1c1bf511b86340329c0b3fdbd6534db63d08315"
+  },
+  "id": "jy4nXTSooQRJ0ftW",
+  "tags": []
+}
